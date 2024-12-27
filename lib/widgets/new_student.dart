@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:protasenko_kiyki_21_8/models/student.dart';
+import '../models/department.dart';
 
 class NewStudent extends StatefulWidget {
   final Student? student;
   final Function(Student) onSave;
 
-  const NewStudent({Key? key, this.student, required this.onSave}) : super(key: key);
+  const NewStudent({super.key, this.student, required this.onSave});
 
   @override
   _NewStudentState createState() => _NewStudentState();
@@ -50,13 +51,24 @@ class _NewStudentState extends State<NewStudent> {
           ),
           DropdownButton<Department>(
             value: selectedDepartment,
-            onChanged: (value) => setState(() => selectedDepartment = value),
+            hint: const Text('Select Department'),
             items: Department.values.map((department) {
               return DropdownMenuItem(
                 value: department,
-                child: Text(department.toString().split('.').last),
+                child: Row(
+                  children: [
+                    Icon(
+                      departmentIcons[department],
+                      color: Colors.blueGrey,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(departmentNames[department]!),
+                  ],
+                ),
               );
             }).toList(),
+            onChanged: (value) => setState(() => selectedDepartment = value),
           ),
           DropdownButton<Gender>(
             value: selectedGender,

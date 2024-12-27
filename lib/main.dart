@@ -1,54 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:protasenko_kiyki_21_8/models/student.dart';
-import 'package:protasenko_kiyki_21_8/widgets/students.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'widgets/tabs_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
-  runApp(const MaterialApp(
-    home: StudentsScreen(
-        students: [
-          Student(
-          firstName: 'Anna',
-          lastName: 'Ivanova',
-          department: Department.it,
-          grade: 90,
-          gender: Gender.female,
+  runApp(const ProviderScope(child: MyApp()));
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Student Manager',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        primarySwatch: Colors.teal,
+        textTheme: GoogleFonts.latoTextTheme().copyWith(
+          titleLarge: GoogleFonts.lato(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.teal.shade900,
+          ),
+          titleMedium: GoogleFonts.lato(
+            fontSize: 16,
+            color: Colors.black87,
+          ),
         ),
-        Student(
-          firstName: 'Ivan',
-          lastName: 'Petrov',
-          department: Department.law,
-          grade: 85,
-          gender: Gender.male,
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.teal,
+          titleTextStyle: GoogleFonts.lato(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
-        Student(
-          firstName: 'Olga',
-          lastName: 'Smirnova',
-          department: Department.finance,
-          grade: 92,
-          gender: Gender.female,
+        floatingActionButtonTheme: const FloatingActionButtonThemeData(
+          backgroundColor: Colors.teal,
+          foregroundColor: Colors.white,
         ),
-        Student(
-          firstName: 'Alexey',
-          lastName: 'Kuznetsov',
-          department: Department.medical,
-          grade: 88,
-          gender: Gender.male,
-        ),
-        Student(
-          firstName: 'Elena',
-          lastName: 'Popova',
-          department: Department.law,
-          grade: 87,
-          gender: Gender.female,
-        ),
-        Student(
-          firstName: 'Dmitry',
-          lastName: 'Sokolov',
-          department: Department.it,
-          grade: 91,
-          gender: Gender.male,
-        ),
-        ],
       ),
-  ));
+      home: const TabsScreen(),
+    );
+  }
 }
