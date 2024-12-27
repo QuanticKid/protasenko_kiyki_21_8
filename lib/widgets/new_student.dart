@@ -1,37 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:protasenko_kiyki_21_8/models/student.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/students_provider.dart';
 import '../models/department.dart';
 
-class NewStudent extends StatefulWidget {
-  final Student? student;
-  final Function(Student) onSave;
+class NewStudent extends ConsumerStatefulWidget {
+  const NewStudent({
+    super.key,
+    this.studentIndex
+  });
 
-  const NewStudent({super.key, this.student, required this.onSave});
+  final int? studentIndex;
 
   @override
-  _NewStudentState createState() => _NewStudentState();
+  ConsumerState<ConsumerStatefulWidget> createState() => _NewStudentState();
 }
 
-class _NewStudentState extends State<NewStudent> {
-  late TextEditingController firstNameController;
-  late TextEditingController lastNameController;
-  late TextEditingController gradeController;
+class _NewStudentState extends ConsumerState<NewStudent> {
+  late TextEditingController firstNameController = TextEditingController();
+  late TextEditingController lastNameController = TextEditingController();
+  late TextEditingController gradeController = TextEditingController();
   Department? selectedDepartment;
   Gender? selectedGender;
 
   @override
   void initState() {
     super.initState();
-    firstNameController = TextEditingController(text: widget.student?.firstName);
-    lastNameController = TextEditingController(text: widget.student?.lastName);
-    gradeController = TextEditingController(text: widget.student?.grade.toString());
-    selectedDepartment = widget.student?.department;
-    selectedGender = widget.student?.gender;
+    if (widget.studentIndex != null) {
+      final student = ref.read(studentsProvider).students[widget.studentIndex!];
+      firstNameController.text = student.firstName;
+      lastNameController.text = student.lastName;
+      gradeController.text = student.grade.toString();
+      selectedGender = student.gender;
+      selectedDepartment = student.department;
+    }
+  }
+
+  void enterStudent() async {
+     final grade = int.tryParse(gradeController.text);
+
+    if (grade == null || selectedDepartment == null || selectedGender == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Enter!'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (widget.studentIndex != null) {
+      await ref.read(studentsProvider.notifier).editStudent(
+            widget.studentIndex!,
+            firstNameController.text.trim(),
+            lastNameController.text.trim(),
+            selectedDepartment,
+            selectedGender,
+            grade,
+          );
+    } else {
+      await ref.read(studentsProvider.notifier).addStudent(
+            firstNameController.text.trim(),
+            lastNameController.text.trim(),
+            selectedDepartment,
+            selectedGender,
+            grade,
+          );
+    }
+
+    if (!context.mounted) return;
+
+    Navigator.of(context).pop(); 
   }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    final studentsState = ref.watch(studentsProvider);
+
+    Widget newStudentScreen = Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -81,21 +127,18 @@ class _NewStudentState extends State<NewStudent> {
             }).toList(),
           ),
           ElevatedButton(
-            onPressed: () {
-              final student = Student(
-                firstName: firstNameController.text,
-                lastName: lastNameController.text,
-                grade: int.tryParse(gradeController.text) ?? 0,
-                department: selectedDepartment!,
-                gender: selectedGender!,
-              );
-              widget.onSave(student);
-              Navigator.of(context).pop();
-            },
+            onPressed: enterStudent,
             child: const Text('Save'),
           ),
         ],
       ),
     );
+
+    if(studentsState.isLoading) {
+      newStudentScreen = const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+    return newStudentScreen; 
   }
 }

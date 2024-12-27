@@ -8,33 +8,36 @@ import '../models/student.dart';
 class StudentsScreen extends ConsumerWidget {
   const StudentsScreen({super.key});
 
-  void _showEditStudentModal(BuildContext context, WidgetRef ref, {required Student student}) {
+  void _showEditStudentModal(BuildContext context, WidgetRef ref, {int? index}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (_) {
-        return NewStudent(
-          student: student,
-          onSave: (updatedStudent) {
-            ref.read(studentsProvider.notifier).editStudent(student, updatedStudent);
-          },
-        );
+        return NewStudent(studentIndex: index);
       },
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final students = ref.watch(studentsProvider);
+    final studentsState = ref.watch(studentsProvider);
     final notifier = ref.read(studentsProvider.notifier);
 
     return Scaffold(
-      body: students.isEmpty
-          ? const Center(child: Text('Empty.'))
-          : ListView.builder(
-              itemCount: students.length,
+      body: () {
+        if (studentsState.isLoading) {
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        } else if (studentsState.students.isEmpty) {
+          return const Center(
+            child: Text("Empty."),
+          );
+        } else {
+          return ListView.builder(
+              itemCount: studentsState.students.length,
               itemBuilder: (context, index) {
-                final student = students[index];
+                final student = studentsState.students[index];
                 return Dismissible(
                   key: ValueKey(student),
                   direction: DismissDirection.endToStart,
@@ -45,7 +48,7 @@ class StudentsScreen extends ConsumerWidget {
                     child: const Icon(Icons.delete, color: Colors.white),
                   ),
                   onDismissed: (_) {
-                    notifier.deleteStudent(student);
+                    notifier.deleteStudent(index);
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
@@ -57,27 +60,32 @@ class StudentsScreen extends ConsumerWidget {
                           },
                         ),
                       ),
-                    );
+                    ).closed.then((value) {
+                      if (value != SnackBarClosedReason.action) {
+                        ref.read(studentsProvider.notifier).removeInstant();
+                      }
+                    });
                   },
                   child: InkWell(
                     onTap: () {
-                      _showEditStudentModal(context, ref, student: student);
+                      _showEditStudentModal(context, ref, index: index);
                     },
                     child: StudentItem(student: student),
                   ),
                 );
               },
-            ),
+            );
+        
+      }
+      }(),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showModalBottomSheet(
           context: context,
           isScrollControlled: true,
-          builder: (_) => NewStudent(
-            onSave: (newStudent) => notifier.addStudent(newStudent),
-          ),
+          builder: (_) => NewStudent(),
         ),
         child: const Icon(Icons.add),
-      ),
+      )
     );
   }
 }

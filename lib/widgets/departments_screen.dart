@@ -8,10 +8,17 @@ class DepartmentsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final students = ref.watch(studentsProvider);
+    final state = ref.watch(studentsProvider);
+
+    if (state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     final departmentCounts = {
       for (var department in Department.values)
-        department: students.where((student) => student.department == department).length,
+        department: state.students
+            .where((s) => s.department == department)
+            .length,
     };
 
     return GridView.builder(
